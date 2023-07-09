@@ -1,0 +1,23 @@
+ui:
+  enabled: true
+
+server:
+  ha:
+    enabled: false
+    replicas: 3
+  
+    raft:
+      enabled: false
+  
+  dataStorage:
+    size: "1Gi"
+    enabled: false
+    storageClass: local-path
+  
+  auditStorage:
+    size: "1Gi"
+    enabled: false
+    storageClass: local-path
+
+injector:
+  enabled: true

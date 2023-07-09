@@ -1,0 +1,14 @@
+version: "3.2"
+services:
+  reveal:
+    image: cloudogu/reveal.js
+    environment:
+      - "THEME_CSS=deriv.css"
+    volumes:
+      - "./style/deriv.css:/reveal/dist/theme/deriv.css:ro"
+      - "./slides/slides.html:/resources/slides.html:ro"
+      - "./slides:/reveal/docs/slides:ro"
+      - "./images:/reveal/images:ro"
+    ports:
+      - "8080:8080"
+
