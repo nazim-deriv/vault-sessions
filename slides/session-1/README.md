@@ -64,6 +64,8 @@ vault kv get internal/database/config
 vault auth enable kubernetes
 vault write auth/kubernetes/config kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443"
 ```
+
+---
 - For a client to read the secret data defined at `internal/database/config`, requires that the read capability be granted for the path `internal/data/database/config`.
 ```
 vault policy write internal-app - <<EOF
@@ -84,26 +86,26 @@ vault write auth/kubernetes/role/internal-app \
 ```
 
 ---
-- The role created above defined a cluster's service account `internal-app` which needs to be created
+The role created above defined a cluster's service account `internal-app` which needs to be created
 ```
 kubectl create sa internal-app
 ```
-- Let's deploy an application and inject the above created KV secret into the container of the pod
+Let's deploy an application and inject the above created KV secret into the container of the pod
 ```
 kubectl apply -f deployment-orgchart.yaml
 ```
-- The Vault-Agent injector looks for deployments that define specific annotations. None of these annotations exist in the current deployment. This means that no secrets are present on the orgchart container in the orgchart pod.
+The Vault-Agent injector looks for deployments that define specific annotations. None of these annotations exist in the current deployment. This means that no secrets are present on the orgchart container in the orgchart pod.
 ```
 kubectl exec -it $(kubectl get pod -l app=orgchart -o jsonpath="{.items[0].metadata.name}") --container orgchart -- ls /vault/secrets
 ```
 
 ---
-- The Vault Agent Injector only modifies a deployment if it contains a specific set of annotations.
+The Vault Agent Injector only modifies a deployment if it contains a specific set of annotations.
 ```
 kubectl patch deploy orgchart --patch "$(cat patch-injector.yaml)"
 kubectl exec -it $(kubectl get pod -l app=orgchart -o jsonpath="{.items[0].metadata.name}") --container orgchart -- cat /vault/secrets/database-config.txt
 ```
-- The structure of the injected secrets may need to be structured in a way for an application to use. Before writing the secrets to the file system a template can structure the data.
+The structure of the injected secrets may need to be structured in a way for an application to use. Before writing the secrets to the file system a template can structure the data.
 ```
 kubectl patch deployment orgchart --patch "$(cat patch-inject-secrets-as-template.yaml)"
 kubectl exec -it $(kubectl get pod -l app=orgchart -o jsonpath="{.items[0].metadata.name}") --container orgchart -- cat /vault/secrets/database-config.txt
@@ -149,6 +151,7 @@ vault kv undelete -mount=<mount_name> <key>
 ---
 ## References
 Following are few of the referenced links:
+
 https://developer.hashicorp.com/vault/docs/concepts/seal
 https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-first-secret
 https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-dynamic-secrets
