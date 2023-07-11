@@ -16,29 +16,45 @@ HashiCorp Vault is an open-source tool designed for securely storing, accessing,
 ## Pre-requisites to set it up on kubernetes cluster
 - Kubernetes cluster
 - Helm
+```
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+```
 
 ---
-## Setting it up in the cluster
-Since we will be using a helm based approach, it just takes two commands to install vault in the cluster
+## Setting it up on the cluster
+- Clone the repo
+```
+git clone git@github.com:nazim-deriv/vault-sessions.git
+cd vault-sessions/slides/session-1/
+```
+- Since we will be using a helm based approach, it just takes two commands to install vault
 ```
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm upgrade --install vault hashicorp/vault --values values.yaml
+```
+- Login to the vault's pod & initialize the vault
+```
+kubectl exec -it pod/vault-0 -- sh
+vault operator init
 ```
 
 ---
 ## Vault unsealing / sealing
 - When a Vault server is started, it starts in a sealed state. In this state, Vault is configured to know where and how to access the physical storage, but doesn't know how to decrypt any of it.
 - Unsealing is the process of obtaining the plaintext root key necessary to read the decryption key to decrypt the data, allowing access to the Vault.
-- Prior to unsealing, almost no operations are possible with Vault. For example authentication, managing the mount tables, etc. are all not possible. The only possible operations are to unseal the Vault and check the status of the seal.
 
 ---
-Following command is used to unseal the vault
+Following command is used to unseal the vault. Do note that the threshold to unseal the vault is `3` keys
 ```
-vault operator unseal <key>
+vault operator unseal <key_1>
+vault operator unseal <key_2>
+vault operator unseal <key_3>
 ```
 
 Once a Vault node is unsealed, it remains unsealed until one of these things happens:
-- It is resealed via the API (see below).
+- It is resealed via the API.
 - The server is restarted.
 - Vault's storage layer encounters an unrecoverable error.
 
@@ -46,14 +62,15 @@ There is also an API to seal the Vault. This will throw away the root key in mem
 
 ---
 ## Storing secrets in vault
-- Key/Value secrets engine is a generic key-value store used to store arbitrary secrets within the configured physical storage for Vault. Secrets written to Vault are encrypted and then written to backend storage.
-- Let's create a database secret to store a username and password at the path internal/database/config. In order to create this secret, it needs key/value secret engine in vault to be enabled.
+- Key/Value secrets engine is a generic key-value store used to store arbitrary secrets. Secrets written to Vault are encrypted and then written to backend storage.
+- Let's login to the vault & create a database secret to store a username and password at the path internal/database/config. In order to create this secret, it needs key/value secret engine in vault to be enabled.
 ```
+vault login
 vault secrets enable -path=internal kv-v2
 ```
 - Create a key/value secret using following command:
 ```
-vault kv put internal/database/config username="db-readonly-username" password="db-secret-password"
+vault kv put internal/database/config username="postgres" password="hshsdhtwrabzfdb4wgwge"
 vault kv get internal/database/config
 ```
 
@@ -76,7 +93,7 @@ EOF
 ```
 
 ---
-- Create a Kubernetes authentication role named `internal-app`. The role connects the Kubernetes service account, internal-app, and namespace, default, with the Vault policy, internal-app. The tokens returned after authentication are valid for 24 hours.
+- Create a Kubernetes authentication role named `internal-app`. The role connects the Kubernetes service account, internal-app, and namespace, default, with the Vault policy, `internal-app`. The tokens returned after authentication are valid for 24 hours.
 ```
 vault write auth/kubernetes/role/internal-app \
       bound_service_account_names=internal-app \
@@ -158,4 +175,5 @@ https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-
 https://developer.hashicorp.com/vault/tutorials/kubernetes/kubernetes-sidecar
 https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v2
 https://developer.hashicorp.com/vault/docs/secrets/databases/postgresql
+https://developer.hashicorp.com/vault/api-docs/secret
 
