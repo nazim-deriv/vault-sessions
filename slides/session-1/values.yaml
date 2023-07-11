@@ -12,12 +12,12 @@ server:
   dataStorage:
     size: "1Gi"
     enabled: false
-    storageClass: local-path
+    storageClass: longhorn
   
   auditStorage:
     size: "1Gi"
     enabled: false
-    storageClass: local-path
+    storageClass: longhorn
 
 injector:
   enabled: true
