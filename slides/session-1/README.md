@@ -41,6 +41,17 @@ vault operator init
 ```
 
 ---
+- If you wish to access the vault UI, there is a yaml file called `vault-ui-traefik.yaml` which will create an ingress traefik rule to make UI accessible on port `80` over `localhost` [Note that this setup assumes you already have traefik deployed on the cluster. If its not present, then deploy it before creating the rule]
+```
+kubectl apply -f vault-ui-traefik.yaml
+```
+- Add following entry in your `/etc/hosts` file
+```
+127.0.0.1 test-vault.com
+```
+- Access the vault UI by visiting: http://test-vault.com/ on your browser
+
+---
 ## Vault unsealing / sealing
 - When a Vault server is started, it starts in a sealed state. In this state, Vault is configured to know where and how to access the physical storage, but doesn't know how to decrypt any of it.
 - Unsealing is the process of obtaining the plaintext root key necessary to read the decryption key to decrypt the data, allowing access to the Vault.
